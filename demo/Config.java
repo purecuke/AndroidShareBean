@@ -55,29 +55,42 @@ public class Config {
         setParameter("age", age);
     }
 
+    /**
+     * get parameter
+     * @param key The name of the preference to retrieve.
+     * @param defValue Value to return if this preference does not exist.
+     * @param classOfT Value Class
+     * @param <T> return type
+     * @return
+     */
     public <T> T getParameter(String key, Object defValue, Class<T> classOfT) {
         Object result = null;
         switch (classOfT.getSimpleName()){
-            case "Boolean": result = sp.getBoolean(key, (Boolean) defValue);break;
-            case "Integer": result = sp.getInt(key, (Integer) defValue); break;
-            case "Long": result = sp.getLong(key, (Long) defValue); break;
-            case "Float": result = sp.getFloat(key, (Float) defValue); break;
-            case "String": result = sp.getString(key, (String) defValue); break;
-            default: result = sp.getString(key, defValue.toString()); break;
+            case "Boolean": result = sharedPreferences.getBoolean(key, (Boolean) defValue);break;
+            case "Integer": result = sharedPreferences.getInt(key, (Integer) defValue); break;
+            case "Long": result = sharedPreferences.getLong(key, (Long) defValue); break;
+            case "Float": result = sharedPreferences.getFloat(key, (Float) defValue); break;
+            case "String": result = sharedPreferences.getString(key, (String) defValue); break;
+            default: throw new IllegalArgumentException(classOfT.getSimpleName() + " is not support");
         }
         return (T)result;
     }
 
+    /**
+     * Set a value in the preferences editor, to be written back
+     * @param key The name of the preference to modify.
+     * @param value The new value for the preference.
+     */
     public void setParameter(String key,final Object value) {
-        SharedPreferences.Editor  editor = sp.edit();
+        SharedPreferences.Editor  editor = sharedPreferences.edit();
         switch (value.getClass().getSimpleName()){
             case "Boolean":editor.putBoolean(key, (Boolean) value); break;
             case "Integer":editor.putInt(key, (Integer) value); break;
             case "Long":editor.putLong(key, (Long) value); break;
             case "Float":editor.putFloat(key, (Float) value); break;
             case "String":editor.putString(key, (String) value); break;
-            default:editor.putString(key, value.toString()); break;
+            default: throw new IllegalArgumentException(value.getClass().getSimpleName() + " is not support");
         }
-        editor.apply();
+        editor.commit();
     }
 }

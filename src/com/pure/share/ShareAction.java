@@ -7,7 +7,6 @@ import com.intellij.openapi.actionSystem.PlatformDataKeys;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.psi.PsiClass;
-import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -19,15 +18,15 @@ import java.util.List;
 public class ShareAction extends AnAction {
     @Override
     public void actionPerformed(AnActionEvent anActionEvent) {
-        PsiClass psiClass = getPsiClassFromEvent(anActionEvent);
-        List<PsiField> fields = Arrays.asList(psiClass.getFields());
-        generateAccessors(psiClass, filterField(fields));
+        PsiHolder holder = getPsiClassFromEvent(anActionEvent);
+        List<PsiField> fields = Arrays.asList(holder.psiClass.getFields());
+        generateAccessors(holder, filterField(fields));
     }
-    private void generateAccessors(final PsiClass psiClass, final List<PsiField> fields) {
-        new WriteCommandAction.Simple(psiClass.getProject(), psiClass.getContainingFile()) {
+    private void generateAccessors(final PsiHolder holder, final List<PsiField> fields) {
+        new WriteCommandAction.Simple(holder.psiClass.getProject(),holder.psiClass.getContainingFile()) {
             @Override
             protected void run() throws Throwable {
-                new CodeGenerator(psiClass, fields).generate();
+                new CodeGenerator(holder, fields).generate();
             }
         }.execute();
     }
@@ -51,7 +50,7 @@ public class ShareAction extends AnAction {
         return fieldList;
     }
 
-    private PsiClass getPsiClassFromEvent(AnActionEvent event) {
+    private PsiHolder getPsiClassFromEvent(AnActionEvent event) {
         PsiFile psiFile = event.getData(LangDataKeys.PSI_FILE);
         Editor editor = event.getData(PlatformDataKeys.EDITOR);
 
@@ -60,8 +59,9 @@ public class ShareAction extends AnAction {
         }
 
         int offset = editor.getCaretModel().getOffset();
-        PsiElement element = psiFile.findElementAt(offset);
-
-        return PsiTreeUtil.getParentOfType(element, PsiClass.class);
+        PsiHolder holder = new PsiHolder();
+        holder.element = psiFile.findElementAt(offset);
+        holder.psiClass =  PsiTreeUtil.getParentOfType(holder.element, PsiClass.class);
+        return holder;
     }
 }

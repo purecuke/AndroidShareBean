@@ -1,11 +1,7 @@
 package com.pure.share;
 
 
-import com.intellij.psi.JavaPsiFacade;
-import com.intellij.psi.PsiClass;
-import com.intellij.psi.PsiElementFactory;
-import com.intellij.psi.PsiField;
-import com.intellij.psi.PsiMethod;
+import com.intellij.psi.*;
 import com.intellij.psi.codeStyle.JavaCodeStyleManager;
 
 import java.util.ArrayList;
@@ -13,10 +9,12 @@ import java.util.List;
 
 public class CodeGenerator {
     private final PsiClass mClass;
+    private PsiElement element;
     private final List<PsiField> mFields;
 
-    public CodeGenerator(PsiClass psiClass, List<PsiField> fields) {
-        mClass = psiClass;
+    public CodeGenerator(PsiHolder holder, List<PsiField> fields) {
+        mClass = holder.psiClass;
+        element = holder.element;
         mFields = fields;
     }
 
@@ -54,19 +52,19 @@ public class CodeGenerator {
                 methods.add(setter);
             }
         }
+        JavaCodeStyleManager styleManager = JavaCodeStyleManager.getInstance(mClass.getProject());
+        for (PsiMethod method : methods) {
+            element = styleManager.shortenClassReferences(mClass.addAfter(method, element));
+        }
         if(isAddGetParameter){
             PsiMethod getter =
                     elementFactory.createMethodFromText("public <T> T getParameter(String key, Object defValue,Class<T> classOfT){ return null;}", mClass);
-            methods.add(getter);
+            styleManager.shortenClassReferences(mClass.add(getter));
         }
         if(isAddSetParameter){
             PsiMethod setter =
                     elementFactory.createMethodFromText("public void setParameter(String key, Object value){ }", mClass);
-            methods.add(setter);
-        }
-        JavaCodeStyleManager styleManager = JavaCodeStyleManager.getInstance(mClass.getProject());
-        for (PsiMethod method : methods) {
-            styleManager.shortenClassReferences(mClass.add(method));
+            styleManager.shortenClassReferences(mClass.add(setter));
         }
     }
 
@@ -85,9 +83,9 @@ public class CodeGenerator {
     private String generateGetterMethodName(String name){
         StringBuilder sb = new StringBuilder(name);
         // verify that the first character is an 'm' or an 's' and the second is uppercase
-        if ((sb.charAt(0) == 'm' || sb.charAt(0) == 's') && sb.charAt(1) < 97) {
-            sb.deleteCharAt(0);
-        }
+//        if ((sb.charAt(0) == 'm' || sb.charAt(0) == 's') && sb.charAt(1) < 97) {
+//            sb.deleteCharAt(0);
+//        }
         sb.setCharAt(0, Character.toUpperCase(sb.charAt(0)));
         sb.insert(0, "get");
         return sb.toString();
@@ -106,9 +104,9 @@ public class CodeGenerator {
     private String generateSetterMethodName(String name){
         StringBuilder sb = new StringBuilder(name);
         // verify that the first character is an 'm' or an 's' and the second is uppercase
-        if ((sb.charAt(0) == 'm' || sb.charAt(0) == 's') && sb.charAt(1) < 97) {
-            sb.deleteCharAt(0);
-        }
+//        if ((sb.charAt(0) == 'm' || sb.charAt(0) == 's') && sb.charAt(1) < 97) {
+//            sb.deleteCharAt(0);
+//        }
         sb.insert(0, "set");
         sb.setCharAt(3, Character.toUpperCase(sb.charAt(3)));
         return sb.toString();

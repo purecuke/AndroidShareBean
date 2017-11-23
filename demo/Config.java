@@ -76,7 +76,7 @@ public class Config {
             case "Long":editor.putLong(key, (Long) value); break;
             case "Float":editor.putFloat(key, (Float) value); break;
             case "String":editor.putString(key, (String) value); break;
-            default:editor.putString(key, value.toString());
+            default:editor.putString(key, value.toString()); break;
         }
         editor.apply();
     }
